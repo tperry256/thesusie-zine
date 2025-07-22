@@ -143,6 +143,90 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Enhanced TOC Styles */
+.enhanced-toc {
+    background-color: #f8f8f8;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 3rem;
+    border: 1px solid #ddd;
+}
+
+.enhanced-toc h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+}
+
+.toc-section {
+    margin-bottom: 1.5rem;
+}
+
+.toc-main-link {
+    display: block;
+    font-weight: bold;
+    color: #2c3e50;
+    text-decoration: none;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.toc-main-link:hover {
+    color: #3498db;
+    margin-left: 5px;
+}
+
+.toc-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.toc-keyword {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.toc-keyword:hover {
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+    transform: translateY(-2px);
+}
+
+/* Paragraph styles */
+p {
+    margin: 1rem 0;
+    line-height: 1.8;
+}
+
+/* Keyword highlight */
+.keyword-highlight {
+    background-color: #ffeb3b;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+    animation: highlight-pulse 1s ease-out;
+}
+
+@keyframes highlight-pulse {
+    0% {
+        background-color: #ff9800;
+    }
+    100% {
+        background-color: #ffeb3b;
+    }
+}
+
 @media (max-width: 768px) {
     header h1 {
         font-size: 2rem;
@@ -158,6 +242,14 @@ html {
     
     .content {
         padding: 1rem;
+    }
+    
+    .enhanced-toc {
+        padding: 1rem;
+    }
+    
+    .toc-keywords {
+        margin-left: 1rem;
     }
     
     #back-to-top {

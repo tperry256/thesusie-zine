@@ -4,79 +4,173 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let zineContent = '';
     
-    // Parse content and make TOC clickable
+    // Extract keywords from a paragraph
+    function extractKeywords(text) {
+        if (!text || text.length < 20) return null;
+        
+        // Remove common words and get significant terms
+        const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+                          'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 
+                          'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
+                          'would', 'should', 'could', 'may', 'might', 'must', 'can', 'this',
+                          'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
+                          'them', 'their', 'my', 'your', 'our', 'me', 'him', 'her'];
+        
+        const words = text.toLowerCase()
+            .replace(/[^\w\s]/g, ' ')
+            .split(/\s+/)
+            .filter(word => word.length > 3 && !stopWords.includes(word));
+        
+        // Get most significant word (first substantial word)
+        if (words.length > 0) {
+            // Prefer capitalized words from original text
+            const matches = text.match(/\b[A-Z][a-z]+/g);
+            if (matches && matches.length > 0) {
+                return matches[0];
+            }
+            return words[0].charAt(0).toUpperCase() + words[0].slice(1);
+        }
+        return null;
+    }
+    
+    // Build enhanced TOC and parse content
     function parseContent(content) {
         const lines = content.split('\n');
         let processedLines = [];
+        let enhancedTOC = [];
+        let currentSection = null;
+        let paragraphCount = 0;
         let inTOC = false;
         let tocEnded = false;
-        const tocToContent = new Map();
+        const sections = new Map();
         
-        // First pass: build mapping between TOC entries and actual content headers
+        // First pass: analyze structure
+        let currentParagraph = [];
         lines.forEach((line, index) => {
-            // Find all section headers with double underscores
+            // Detect sections
             const sectionMatch = line.match(/^__(.+?)__$/);
             if (sectionMatch) {
                 const sectionText = sectionMatch[1].trim();
-                
-                // Map different variations
-                if (sectionText.includes('CH')) {
-                    // Extract chapter number and title
-                    const chNum = sectionText.match(/CH(\d+)/);
-                    if (chNum) {
-                        tocToContent.set(`CH${chNum[1]}`, index);
-                        tocToContent.set(sectionText, index);
+                currentSection = {
+                    title: sectionText,
+                    index: index,
+                    paragraphs: []
+                };
+                sections.set(sectionText, currentSection);
+            }
+            
+            // Build paragraphs
+            if (currentSection && !sectionMatch) {
+                if (line.trim() === '') {
+                    if (currentParagraph.length > 0) {
+                        const paragraphText = currentParagraph.join(' ');
+                        const keyword = extractKeywords(paragraphText);
+                        if (keyword) {
+                            currentSection.paragraphs.push({
+                                keyword: keyword,
+                                index: index - currentParagraph.length,
+                                text: paragraphText
+                            });
+                        }
+                        currentParagraph = [];
                     }
+                } else {
+                    currentParagraph.push(line);
                 }
-                tocToContent.set(sectionText, index);
             }
         });
         
-        // Second pass: process content
+        // Second pass: build enhanced TOC
+        let tocHtml = ['<div class="enhanced-toc">'];
+        tocHtml.push('<h3>Table of Contents</h3>');
+        
+        // Original TOC entries
         lines.forEach((line, index) => {
             if (line.includes('Table of Contents')) {
                 inTOC = true;
-                processedLines.push(`<span id="toc">${line}</span>`);
                 return;
             }
             
-            // End TOC detection - empty line after entries
             if (inTOC && line.trim() === '' && !tocEnded) {
                 tocEnded = true;
                 inTOC = false;
             }
             
-            // Process TOC entries
             if (inTOC && line.trim() !== '') {
-                let processed = false;
-                
-                // Try to find matching content
-                for (const [key, contentIndex] of tocToContent) {
-                    // Check if TOC line contains the chapter/section identifier
-                    const tocChapter = line.match(/CH\d+/);
-                    const keyChapter = key.match(/CH\d+/);
+                // Find matching section
+                let matchedSection = null;
+                for (const [sectionTitle, section] of sections) {
+                    const chapterMatch = line.match(/CH(\d+)/);
+                    const sectionChapterMatch = sectionTitle.match(/CH(\d+)/);
                     
-                    if (tocChapter && keyChapter && tocChapter[0] === keyChapter[0]) {
-                        processedLines.push(`<a href="#section-${contentIndex}" class="toc-link">${line}</a>`);
-                        processed = true;
-                        break;
-                    } else if (line.trim() === key || line.includes(key)) {
-                        processedLines.push(`<a href="#section-${contentIndex}" class="toc-link">${line}</a>`);
-                        processed = true;
+                    if (chapterMatch && sectionChapterMatch && 
+                        chapterMatch[1] === sectionChapterMatch[1]) {
+                        matchedSection = section;
                         break;
                     }
                 }
                 
-                if (!processed) {
-                    processedLines.push(line);
+                if (matchedSection) {
+                    tocHtml.push(`<div class="toc-section">`);
+                    tocHtml.push(`<a href="#section-${matchedSection.index}" class="toc-main-link">${line}</a>`);
+                    
+                    // Add keywords as sub-links
+                    if (matchedSection.paragraphs.length > 0) {
+                        tocHtml.push('<div class="toc-keywords">');
+                        matchedSection.paragraphs.forEach((para, i) => {
+                            tocHtml.push(`<a href="#para-${matchedSection.index}-${i}" class="toc-keyword" data-keyword="${para.keyword}">${para.keyword}</a>`);
+                        });
+                        tocHtml.push('</div>');
+                    }
+                    tocHtml.push('</div>');
+                } else {
+                    tocHtml.push(`<div class="toc-section">${line}</div>`);
                 }
-            } else if (line.match(/^__(.+?)__$/)) {
-                // Add anchor to section headers
-                processedLines.push(`<span id="section-${index}" class="section-header">${line}</span>`);
-            } else {
-                processedLines.push(line);
             }
         });
+        
+        tocHtml.push('</div>');
+        
+        // Third pass: process content with paragraph IDs
+        processedLines.push(tocHtml.join('\n'));
+        
+        currentSection = null;
+        let sectionParaCount = 0;
+        currentParagraph = [];
+        let currentParagraphStartIndex = 0;
+        
+        lines.forEach((line, index) => {
+            const sectionMatch = line.match(/^__(.+?)__$/);
+            if (sectionMatch) {
+                // Flush current paragraph if any
+                if (currentParagraph.length > 0) {
+                    const paraId = currentSection ? `para-${currentSection.index}-${sectionParaCount}` : '';
+                    processedLines.push(`<p id="${paraId}">${currentParagraph.join('\n')}</p>`);
+                    currentParagraph = [];
+                }
+                
+                const sectionText = sectionMatch[1].trim();
+                currentSection = sections.get(sectionText);
+                sectionParaCount = 0;
+                processedLines.push(`<span id="section-${index}" class="section-header">${line}</span>`);
+            } else if (line.trim() === '') {
+                if (currentParagraph.length > 0) {
+                    const paraId = currentSection ? `para-${currentSection.index}-${sectionParaCount}` : '';
+                    processedLines.push(`<p id="${paraId}">${currentParagraph.join('\n')}</p>`);
+                    sectionParaCount++;
+                    currentParagraph = [];
+                }
+                processedLines.push('');
+            } else {
+                currentParagraph.push(line);
+            }
+        });
+        
+        // Flush last paragraph
+        if (currentParagraph.length > 0) {
+            const paraId = currentSection ? `para-${currentSection.index}-${sectionParaCount}` : '';
+            processedLines.push(`<p id="${paraId}">${currentParagraph.join('\n')}</p>`);
+        }
         
         return processedLines.join('\n');
     }
@@ -107,14 +201,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup click handlers for TOC links
     function setupClickHandlers() {
-        const tocLinks = document.querySelectorAll('.toc-link');
-        tocLinks.forEach(link => {
+        // Handle main section links
+        const mainLinks = document.querySelectorAll('.toc-main-link');
+        mainLinks.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 const targetId = this.getAttribute('href').substring(1);
                 const targetElement = document.getElementById(targetId);
                 if (targetElement) {
                     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+        
+        // Handle keyword links
+        const keywordLinks = document.querySelectorAll('.toc-keyword');
+        keywordLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const keyword = this.getAttribute('data-keyword');
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    // Clear previous highlights
+                    document.querySelectorAll('.keyword-highlight').forEach(el => {
+                        el.classList.remove('keyword-highlight');
+                    });
+                    
+                    // Scroll to paragraph
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Highlight the keyword in the paragraph
+                    setTimeout(() => {
+                        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+                        targetElement.innerHTML = targetElement.innerHTML.replace(regex, 
+                            match => `<span class="keyword-highlight">${match}</span>`);
+                    }, 500);
                 }
             });
         });
