@@ -62,8 +62,29 @@ document.addEventListener('DOMContentLoaded', function() {
         html.push('</div>');
         html.push('<hr style="margin: 2rem 0;">');
         
-        // Process content with line anchors
+        // Process content with line anchors, skip original TOC
+        let skipOriginalTOC = false;
+        let originalTOCEnded = false;
+        
         lines.forEach((line, index) => {
+            // Skip the original Table of Contents section
+            if (line.includes('Table of Contents')) {
+                skipOriginalTOC = true;
+                return; // Don't include this line
+            }
+            
+            // End of original TOC detection
+            if (skipOriginalTOC && !originalTOCEnded) {
+                if (line.match(/^__(.+?)__$/) || 
+                    (line.trim() === '' && lines[index + 1] && lines[index + 1].match(/^__(.+?)__$/))) {
+                    skipOriginalTOC = false;
+                    originalTOCEnded = true;
+                } else {
+                    return; // Skip this line (part of original TOC)
+                }
+            }
+            
+            // Process normal content
             if (line.match(/^__(.+?)__$/)) {
                 html.push(`<h3 id="line-${index}" class="section-header">${line}</h3>`);
             } else {
