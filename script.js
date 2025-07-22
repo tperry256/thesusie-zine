@@ -9,51 +9,59 @@ document.addEventListener('DOMContentLoaded', function() {
         const lines = content.split('\n');
         let processedLines = [];
         let inTOC = false;
-        let tocStarted = false;
-        const chapters = new Map();
+        let tocEnded = false;
+        const tocToContent = new Map();
         
-        // First pass: find all chapters and sections
+        // First pass: build mapping between TOC entries and actual content headers
         lines.forEach((line, index) => {
-            if (line.includes('Table of Contents')) {
-                inTOC = true;
-                tocStarted = true;
-            }
-            
-            // Check for chapter patterns
-            const chapterMatch = line.match(/^(CH\d+[a-z]?:|__CH\d+\.|CH\d+\.)/);
-            if (chapterMatch) {
-                const chapterKey = line.trim();
-                chapters.set(chapterKey, `chapter-${index}`);
-            }
-            
-            // Check for section headers (double underscores)
+            // Find all section headers with double underscores
             const sectionMatch = line.match(/^__(.+?)__$/);
-            if (sectionMatch && !line.includes('Table of Contents')) {
-                const sectionKey = sectionMatch[1].trim();
-                chapters.set(sectionKey, `section-${index}`);
+            if (sectionMatch) {
+                const sectionText = sectionMatch[1].trim();
+                
+                // Map different variations
+                if (sectionText.includes('CH')) {
+                    // Extract chapter number and title
+                    const chNum = sectionText.match(/CH(\d+)/);
+                    if (chNum) {
+                        tocToContent.set(`CH${chNum[1]}`, index);
+                        tocToContent.set(sectionText, index);
+                    }
+                }
+                tocToContent.set(sectionText, index);
             }
         });
         
         // Second pass: process content
-        inTOC = false;
-        tocStarted = false;
-        
         lines.forEach((line, index) => {
             if (line.includes('Table of Contents')) {
                 inTOC = true;
-                tocStarted = true;
                 processedLines.push(`<span id="toc">${line}</span>`);
                 return;
+            }
+            
+            // End TOC detection - empty line after entries
+            if (inTOC && line.trim() === '' && !tocEnded) {
+                tocEnded = true;
+                inTOC = false;
             }
             
             // Process TOC entries
             if (inTOC && line.trim() !== '') {
                 let processed = false;
                 
-                // Look for matches in chapters map
-                for (const [key, anchor] of chapters) {
-                    if (line.includes(key.replace(/^__|__$/g, '').replace(/^CH\d+\.|^CH\d+:/, 'CH'))) {
-                        processedLines.push(`<a href="#${anchor}" class="toc-link">${line}</a>`);
+                // Try to find matching content
+                for (const [key, contentIndex] of tocToContent) {
+                    // Check if TOC line contains the chapter/section identifier
+                    const tocChapter = line.match(/CH\d+/);
+                    const keyChapter = key.match(/CH\d+/);
+                    
+                    if (tocChapter && keyChapter && tocChapter[0] === keyChapter[0]) {
+                        processedLines.push(`<a href="#section-${contentIndex}" class="toc-link">${line}</a>`);
+                        processed = true;
+                        break;
+                    } else if (line.trim() === key || line.includes(key)) {
+                        processedLines.push(`<a href="#section-${contentIndex}" class="toc-link">${line}</a>`);
                         processed = true;
                         break;
                     }
@@ -62,21 +70,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!processed) {
                     processedLines.push(line);
                 }
-            } else if (line.match(/^(CH\d+[a-z]?:|__CH\d+\.|CH\d+\.)/)) {
-                // Add anchor to chapters
-                const anchor = chapters.get(line.trim());
-                processedLines.push(`<span id="${anchor}" class="chapter-header">${line}</span>`);
             } else if (line.match(/^__(.+?)__$/)) {
                 // Add anchor to section headers
-                const anchor = chapters.get(line.match(/^__(.+?)__$/)[1].trim());
-                processedLines.push(`<span id="${anchor}" class="section-header">${line}</span>`);
+                processedLines.push(`<span id="section-${index}" class="section-header">${line}</span>`);
             } else {
                 processedLines.push(line);
-            }
-            
-            // End of TOC detection
-            if (tocStarted && line.trim() === '' && processedLines.filter(l => l.includes('<a href="#')).length > 5) {
-                inTOC = false;
             }
         });
         
