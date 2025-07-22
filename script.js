@@ -132,14 +132,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Create and add back to top button
     const backToTopBtn = document.createElement('button');
-    backToTopBtn.innerHTML = '↑ Top';
+    backToTopBtn.innerHTML = '↑ Back to Top';
     backToTopBtn.id = 'back-to-top';
     backToTopBtn.style.display = 'none';
+    
+    // Apply styles directly to ensure visibility
+    backToTopBtn.style.position = 'fixed';
+    backToTopBtn.style.bottom = '30px';
+    backToTopBtn.style.right = '30px';
+    backToTopBtn.style.backgroundColor = '#2c3e50';
+    backToTopBtn.style.color = 'white';
+    backToTopBtn.style.border = 'none';
+    backToTopBtn.style.padding = '15px 20px';
+    backToTopBtn.style.borderRadius = '50px';
+    backToTopBtn.style.cursor = 'pointer';
+    backToTopBtn.style.fontSize = '14px';
+    backToTopBtn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+    backToTopBtn.style.zIndex = '1000';
+    backToTopBtn.style.fontFamily = 'Georgia, serif';
+    
     document.body.appendChild(backToTopBtn);
     
     // Show/hide back to top button based on scroll
     window.addEventListener('scroll', function() {
-        if (window.pageYOffset > 300) {
+        if (window.pageYOffset > 200) {
             backToTopBtn.style.display = 'block';
         } else {
             backToTopBtn.style.display = 'none';
@@ -149,6 +165,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Back to top button click handler
     backToTopBtn.addEventListener('click', function() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    
+    // Hover effects
+    backToTopBtn.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#3498db';
+        this.style.transform = 'translateY(-2px)';
+    });
+    
+    backToTopBtn.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#2c3e50';
+        this.style.transform = 'translateY(0)';
     });
     
     // Load content when page loads
