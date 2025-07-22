@@ -18,17 +18,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // Track original TOC
             if (line.includes('Table of Contents')) {
                 inOriginalTOC = true;
-                console.log('Found TOC start at line', index);
-            }
-            if (inOriginalTOC && line.trim() === '') {
-                inOriginalTOC = false;
-                console.log('TOC ended at line', index);
+                console.log('Found TOC start at line', index, ':', line);
             }
             
             // Collect TOC items - be more flexible with chapter detection
             if (inOriginalTOC && line.match(/CH\d+/)) {
-                console.log('Found TOC chapter:', line.trim());
+                console.log('Found TOC chapter at line', index, ':', line.trim());
                 tocItems.push(line.trim());
+            }
+            
+            // End TOC detection - look for first section header after TOC
+            if (inOriginalTOC && line.match(/^__(.+?)__$/) && !line.includes('Table of Contents')) {
+                inOriginalTOC = false;
+                console.log('TOC ended at line', index, 'due to section:', line);
             }
             
             // Find actual chapter headers - look for __CH1. format
