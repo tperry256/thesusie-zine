@@ -130,51 +130,70 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Create and add back to top button
+    // Create and add back to top button - ALWAYS VISIBLE FOR TESTING
+    console.log('Creating back to top button...');
     const backToTopBtn = document.createElement('button');
     backToTopBtn.innerHTML = '↑ Back to Top';
     backToTopBtn.id = 'back-to-top';
-    backToTopBtn.style.display = 'none';
     
     // Apply styles directly to ensure visibility
     backToTopBtn.style.position = 'fixed';
     backToTopBtn.style.bottom = '30px';
     backToTopBtn.style.right = '30px';
-    backToTopBtn.style.backgroundColor = '#2c3e50';
+    backToTopBtn.style.backgroundColor = '#e74c3c'; // RED for visibility
     backToTopBtn.style.color = 'white';
-    backToTopBtn.style.border = 'none';
+    backToTopBtn.style.border = '3px solid #fff';
     backToTopBtn.style.padding = '15px 20px';
     backToTopBtn.style.borderRadius = '50px';
     backToTopBtn.style.cursor = 'pointer';
-    backToTopBtn.style.fontSize = '14px';
-    backToTopBtn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
-    backToTopBtn.style.zIndex = '1000';
+    backToTopBtn.style.fontSize = '16px';
+    backToTopBtn.style.fontWeight = 'bold';
+    backToTopBtn.style.boxShadow = '0 4px 20px rgba(0,0,0,0.5)';
+    backToTopBtn.style.zIndex = '9999';
     backToTopBtn.style.fontFamily = 'Georgia, serif';
+    backToTopBtn.style.display = 'block'; // ALWAYS VISIBLE FOR NOW
+    backToTopBtn.style.transition = 'all 0.3s ease';
     
     document.body.appendChild(backToTopBtn);
+    console.log('Back to top button added to body');
     
-    // Show/hide back to top button based on scroll
-    window.addEventListener('scroll', function() {
-        if (window.pageYOffset > 200) {
-            backToTopBtn.style.display = 'block';
-        } else {
-            backToTopBtn.style.display = 'none';
+    // Test that button is in DOM
+    setTimeout(() => {
+        const testBtn = document.getElementById('back-to-top');
+        console.log('Button in DOM:', testBtn ? 'YES' : 'NO');
+        if (testBtn) {
+            console.log('Button styles:', window.getComputedStyle(testBtn).display);
         }
-    });
+    }, 1000);
+    
+    // Show/hide back to top button based on scroll (DISABLED FOR TESTING)
+    // window.addEventListener('scroll', function() {
+    //     console.log('Scroll position:', window.pageYOffset);
+    //     if (window.pageYOffset > 200) {
+    //         backToTopBtn.style.display = 'block';
+    //         console.log('Showing button');
+    //     } else {
+    //         backToTopBtn.style.display = 'none';
+    //         console.log('Hiding button');
+    //     }
+    // });
     
     // Back to top button click handler
     backToTopBtn.addEventListener('click', function() {
+        console.log('Back to top button clicked!');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     
     // Hover effects
     backToTopBtn.addEventListener('mouseenter', function() {
+        console.log('Button hover enter');
         this.style.backgroundColor = '#3498db';
         this.style.transform = 'translateY(-2px)';
     });
     
     backToTopBtn.addEventListener('mouseleave', function() {
-        this.style.backgroundColor = '#2c3e50';
+        console.log('Button hover leave');
+        this.style.backgroundColor = '#e74c3c';
         this.style.transform = 'translateY(0)';
     });
     
