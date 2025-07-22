@@ -43,37 +43,98 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Build new TOC
-        html.push('<div class="simple-toc">');
-        html.push('<h2>Table of Contents</h2>');
+        // Build new TOC in source order
+        html.push('<div class="sleek-toc">');
+        html.push('<h2><span class="toc-icon">📚</span> Table of Contents</h2>');
+        html.push('<div class="toc-grid">');
         
         console.log('TOC Items found:', tocItems);
         console.log('Chapter locations:', Array.from(chapterLocations.entries()));
         
-        tocItems.forEach(item => {
-            const chapterNum = item.match(/CH(\d+)/);
-            if (chapterNum) {
-                const chapterKey = `CH${chapterNum[1]}`;
-                if (chapterLocations.has(chapterKey)) {
-                    const lineIndex = chapterLocations.get(chapterKey);
-                    console.log('Linking chapter:', item, 'to line', lineIndex);
-                    html.push(`<a href="#line-${lineIndex}" class="toc-item">${item}</a>`);
-                } else {
-                    console.log('No location found for chapter:', chapterKey, 'from item:', item);
-                    console.log('Available locations:', Array.from(chapterLocations.keys()));
-                    html.push(`<div class="toc-item">${item}</div>`);
+        // Collect all TOC items with their line numbers to preserve order
+        const allTocItems = [];
+        
+        // Add TOC items (chapters and other entries) in original order
+        let tocLineStart = -1;
+        let inTocRegion = false;
+        
+        lines.forEach((line, index) => {
+            if (line.includes('Table of Contents')) {
+                tocLineStart = index;
+                inTocRegion = true;
+                return;
+            }
+            
+            // End TOC region when we hit a section header
+            if (inTocRegion && line.match(/^__(.+?)__$/) && !line.includes('Table of Contents')) {
+                inTocRegion = false;
+            }
+            
+            if (tocLineStart >= 0 && inTocRegion) {
+                // Check if this line is a TOC entry
+                if (line.trim() && !line.match(/^__(.+?)__$/)) {
+                    const chapterMatch = line.match(/CH(\d+)/);
+                    if (chapterMatch) {
+                        const chapterKey = `CH${chapterMatch[1]}`;
+                        if (chapterLocations.has(chapterKey)) {
+                            const targetIndex = chapterLocations.get(chapterKey);
+                            allTocItems.push({
+                                text: line.trim(),
+                                link: `#line-${targetIndex}`,
+                                isChapter: true,
+                                order: index
+                            });
+                        } else {
+                            allTocItems.push({
+                                text: line.trim(),
+                                link: null,
+                                isChapter: false,
+                                order: index
+                            });
+                        }
+                    } else if (line.trim() !== '') {
+                        // Non-chapter TOC item, look for matching section
+                        const matchingSection = lines.find((l, i) => {
+                            return l.match(/^__(.+?)__$/) && 
+                                   l.replace(/__/g, '').trim().toLowerCase().includes(line.trim().toLowerCase());
+                        });
+                        if (matchingSection) {
+                            const sectionIndex = lines.indexOf(matchingSection);
+                            allTocItems.push({
+                                text: line.trim(),
+                                link: `#line-${sectionIndex}`,
+                                isChapter: false,
+                                order: index
+                            });
+                        } else {
+                            allTocItems.push({
+                                text: line.trim(),
+                                link: null,
+                                isChapter: false,
+                                order: index
+                            });
+                        }
+                    }
                 }
-            } else {
-                console.log('No chapter number found in item:', item);
-                html.push(`<div class="toc-item">${item}</div>`);
             }
         });
         
-        // Add other main sections
-        lines.forEach((line, index) => {
-            if (line.match(/^__(.+?)__$/) && !line.includes('CH') && !line.includes('Table of Contents')) {
-                const sectionName = line.replace(/__/g, '').trim();
-                html.push(`<a href="#line-${index}" class="toc-item">${sectionName}</a>`);
+        // Sort by original order and render
+        allTocItems.sort((a, b) => a.order - b.order);
+        
+        allTocItems.forEach(item => {
+            if (item.link) {
+                const icon = item.isChapter ? '📖' : '📄';
+                html.push(`<a href="${item.link}" class="toc-link ${item.isChapter ? 'chapter' : 'section'}">
+                    <span class="toc-item-icon">${icon}</span>
+                    <span class="toc-item-text">${item.text}</span>
+                </a>`);
+            } else {
+                const icon = item.isChapter ? '📖' : '📄';
+                html.push(`<div class="toc-link disabled">
+                    <span class="toc-item-icon">${icon}</span>
+                    <span class="toc-item-text">${item.text}</span>
+                </div>`);
             }
         });
         
