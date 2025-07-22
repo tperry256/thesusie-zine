@@ -31,8 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 tocItems.push(line.trim());
             }
             
-            // Find actual chapter headers - be more flexible
-            if (line.match(/^__.*CH\d+.*__$/)) {
+            // Find actual chapter headers - look for __CH1. format
+            if (line.match(/^__CH\d+\./)) {
                 const chapterNum = line.match(/CH(\d+)/);
                 if (chapterNum) {
                     console.log('Found chapter header:', line, 'at line', index);
