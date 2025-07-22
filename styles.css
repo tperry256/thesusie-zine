@@ -39,6 +39,16 @@ header h1 {
     font-size: 1.1rem;
 }
 
+.version {
+    background-color: #f39c12;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
 main {
     flex: 1;
     padding: 2rem;
@@ -143,64 +153,39 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Enhanced TOC Styles */
-.enhanced-toc {
+/* Simple TOC Styles */
+.simple-toc {
     background-color: #f8f8f8;
     padding: 2rem;
     border-radius: 8px;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     border: 1px solid #ddd;
 }
 
-.enhanced-toc h3 {
+.simple-toc h2 {
     font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     color: #2c3e50;
 }
 
-.toc-section {
-    margin-bottom: 1.5rem;
-}
-
-.toc-main-link {
+.toc-item {
     display: block;
-    font-weight: bold;
+    padding: 0.5rem 0;
+    color: #333;
+    text-decoration: none;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+a.toc-item {
     color: #2c3e50;
-    text-decoration: none;
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
     transition: all 0.3s ease;
 }
 
-.toc-main-link:hover {
+a.toc-item:hover {
     color: #3498db;
-    margin-left: 5px;
-}
-
-.toc-keywords {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-left: 1.5rem;
-    margin-top: 0.5rem;
-}
-
-.toc-keyword {
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    text-decoration: none;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    border: 1px solid #dee2e6;
-}
-
-.toc-keyword:hover {
-    background-color: #3498db;
-    color: white;
-    border-color: #3498db;
-    transform: translateY(-2px);
+    background-color: #e8e8e8;
+    padding-left: 1rem;
 }
 
 /* Paragraph styles */
