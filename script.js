@@ -50,12 +50,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         tocItems.forEach(item => {
             const chapterNum = item.match(/CH(\d+)/);
-            if (chapterNum && chapterLocations.has(`CH${chapterNum[1]}`)) {
-                const lineIndex = chapterLocations.get(`CH${chapterNum[1]}`);
-                console.log('Linking chapter:', item, 'to line', lineIndex);
-                html.push(`<a href="#line-${lineIndex}" class="toc-item">${item}</a>`);
+            if (chapterNum) {
+                const chapterKey = `CH${chapterNum[1]}`;
+                if (chapterLocations.has(chapterKey)) {
+                    const lineIndex = chapterLocations.get(chapterKey);
+                    console.log('Linking chapter:', item, 'to line', lineIndex);
+                    html.push(`<a href="#line-${lineIndex}" class="toc-item">${item}</a>`);
+                } else {
+                    console.log('No location found for chapter:', chapterKey, 'from item:', item);
+                    console.log('Available locations:', Array.from(chapterLocations.keys()));
+                    html.push(`<div class="toc-item">${item}</div>`);
+                }
             } else {
-                console.log('No link for item:', item);
+                console.log('No chapter number found in item:', item);
                 html.push(`<div class="toc-item">${item}</div>`);
             }
         });
