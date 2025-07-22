@@ -18,20 +18,24 @@ document.addEventListener('DOMContentLoaded', function() {
             // Track original TOC
             if (line.includes('Table of Contents')) {
                 inOriginalTOC = true;
+                console.log('Found TOC start at line', index);
             }
             if (inOriginalTOC && line.trim() === '') {
                 inOriginalTOC = false;
+                console.log('TOC ended at line', index);
             }
             
-            // Collect TOC items
-            if (inOriginalTOC && line.includes('CH')) {
+            // Collect TOC items - be more flexible with chapter detection
+            if (inOriginalTOC && line.match(/CH\d+/)) {
+                console.log('Found TOC chapter:', line.trim());
                 tocItems.push(line.trim());
             }
             
-            // Find actual chapter headers
+            // Find actual chapter headers - be more flexible
             if (line.match(/^__.*CH\d+.*__$/)) {
                 const chapterNum = line.match(/CH(\d+)/);
                 if (chapterNum) {
+                    console.log('Found chapter header:', line, 'at line', index);
                     chapterLocations.set(`CH${chapterNum[1]}`, index);
                 }
             }
@@ -41,12 +45,17 @@ document.addEventListener('DOMContentLoaded', function() {
         html.push('<div class="simple-toc">');
         html.push('<h2>Table of Contents</h2>');
         
+        console.log('TOC Items found:', tocItems);
+        console.log('Chapter locations:', Array.from(chapterLocations.entries()));
+        
         tocItems.forEach(item => {
             const chapterNum = item.match(/CH(\d+)/);
             if (chapterNum && chapterLocations.has(`CH${chapterNum[1]}`)) {
                 const lineIndex = chapterLocations.get(`CH${chapterNum[1]}`);
+                console.log('Linking chapter:', item, 'to line', lineIndex);
                 html.push(`<a href="#line-${lineIndex}" class="toc-item">${item}</a>`);
             } else {
+                console.log('No link for item:', item);
                 html.push(`<div class="toc-item">${item}</div>`);
             }
         });
@@ -140,18 +149,18 @@ document.addEventListener('DOMContentLoaded', function() {
     backToTopBtn.style.position = 'fixed';
     backToTopBtn.style.bottom = '30px';
     backToTopBtn.style.right = '30px';
-    backToTopBtn.style.backgroundColor = '#e74c3c'; // RED for visibility
+    backToTopBtn.style.backgroundColor = '#2c3e50';
     backToTopBtn.style.color = 'white';
-    backToTopBtn.style.border = '3px solid #fff';
+    backToTopBtn.style.border = 'none';
     backToTopBtn.style.padding = '15px 20px';
     backToTopBtn.style.borderRadius = '50px';
     backToTopBtn.style.cursor = 'pointer';
-    backToTopBtn.style.fontSize = '16px';
-    backToTopBtn.style.fontWeight = 'bold';
-    backToTopBtn.style.boxShadow = '0 4px 20px rgba(0,0,0,0.5)';
-    backToTopBtn.style.zIndex = '9999';
+    backToTopBtn.style.fontSize = '14px';
+    backToTopBtn.style.fontWeight = 'normal';
+    backToTopBtn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+    backToTopBtn.style.zIndex = '1000';
     backToTopBtn.style.fontFamily = 'Georgia, serif';
-    backToTopBtn.style.display = 'block'; // ALWAYS VISIBLE FOR NOW
+    backToTopBtn.style.display = 'none'; // Hidden by default
     backToTopBtn.style.transition = 'all 0.3s ease';
     
     document.body.appendChild(backToTopBtn);
@@ -166,22 +175,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1000);
     
-    // Show/hide back to top button based on scroll (DISABLED FOR TESTING)
-    // window.addEventListener('scroll', function() {
-    //     console.log('Scroll position:', window.pageYOffset);
-    //     if (window.pageYOffset > 200) {
-    //         backToTopBtn.style.display = 'block';
-    //         console.log('Showing button');
-    //     } else {
-    //         backToTopBtn.style.display = 'none';
-    //         console.log('Hiding button');
-    //     }
-    // });
+    // Show/hide back to top button based on scroll
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 200) {
+            backToTopBtn.style.display = 'block';
+        } else {
+            backToTopBtn.style.display = 'none';
+        }
+    });
     
     // Back to top button click handler
     backToTopBtn.addEventListener('click', function() {
         console.log('Back to top button clicked!');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll to the very top of the document
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        // Also use window.scrollTo as backup
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     });
     
     // Hover effects
