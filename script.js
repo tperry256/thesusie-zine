@@ -131,13 +131,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 </a>`);
             } else {
                 const icon = item.isChapter ? '📖' : '📄';
-                html.push(`<div class="toc-link disabled">
+                html.push(`<div class="toc-text-item">
                     <span class="toc-item-icon">${icon}</span>
                     <span class="toc-item-text">${item.text}</span>
                 </div>`);
             }
         });
         
+        html.push('</div>');
         html.push('</div>');
         html.push('<hr style="margin: 2rem 0;">');
         
